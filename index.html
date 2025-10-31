@@ -1,0 +1,230 @@
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>海侨汇通个人客户注册表</title>
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <style>
+    body {
+      font-family: 'Microsoft YaHei', Arial, sans-serif;
+      background-color: #f9f9fb;
+      padding: 40px;
+      color: #333;
+      max-width: 800px;
+      margin: auto;
+    }
+    h1 { text-align: center; color: #1a5dbb; }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #1a5dbb;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      display: block;
+      margin: 30px auto;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>海侨汇通个人客户注册表</h1>
+  <p style="text-align:center;color:#666;">请填写以下信息，系统将为您生成正式开户表</p>
+
+  <form id="webForm">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+      <div class="form-group">
+        <label>Surname (姓) *</label>
+        <input type="text" id="surname" required />
+      </div>
+      <div class="form-group">
+        <label>Given Name (名) *</label>
+        <input type="text" id="givenName" required />
+      </div>
+
+      <div class="form-group">
+        <label>Date of Birth (出生日期) *</label>
+        <input type="date" id="dob" required />
+      </div>
+      <div></div>
+
+      <div class="form-group">
+        <label>Residential Address (家庭住址) *</label>
+        <input type="text" id="address" required />
+      </div>
+      <div class="form-group">
+        <label>Suburb (区) *</label>
+        <input type="text" id="suburb" required />
+      </div>
+
+      <div class="form-group">
+        <label>State (州) *</label>
+        <input type="text" id="state" required />
+      </div>
+      <div class="form-group">
+        <label>Postcode (邮编) *</label>
+        <input type="text" id="postcode" required />
+      </div>
+
+      <div class="form-group">
+        <label>Country (国家)</label>
+        <input type="text" id="country" value="Australia" required />
+      </div>
+      <div class="form-group">
+        <label>Mobile (手机) </label>
+        <input type="text" id="mobile"  />
+      </div>
+
+      <div class="form-group">
+        <label>Home/Biz No. (家庭/工作电话) </label>
+        <input type="text" id="phone" />
+      </div>
+      <div class="form-group">
+        <label>Email (电子邮件) </label>
+        <input type="email" id="email"  />
+      </div>
+
+      <div class="form-group">
+        <label>Occupation (职业) </label>
+        <input type="text" id="occupation" />
+      </div>
+      <div class="form-group">
+        <label>Contact App (通讯软件)</label>
+        <select id="contactApp">
+          <option value="">请选择</option>
+          <option value="WeChat">WeChat</option>
+          <option value="WhatsApp">WhatsApp</option>
+          <option value="Telegram">Telegram</option>
+          <option value="Other">其他</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Account No. (账户号)</label>
+        <input type="text" id="accountNo" />
+      </div>
+    </div>
+
+    <button type="button" id="generatePdf">生成PDF</button>
+  </form>
+
+  <script>
+    const { PDFDocument, rgb } = PDFLib;
+
+    // 🔧 您亲自测试出的最佳坐标（已验证对齐）
+    const FIELD_POSITIONS = {
+      surname:     { x: 120, y: 150 },
+      givenName:   { x: 400, y: 150 },
+      dob:         { x: 200, y: 165 },
+      address:     { x: 200, y: 180 },
+      suburb:      { x: 120, y: 195 },
+      state:       { x: 400, y: 195 },
+      postcode:    { x: 180, y: 210 },
+      country:     { x: 450, y: 210 },
+      mobile:      { x: 180, y: 223 },
+      phone:       { x: 450, y: 223 },
+      email:       { x: 150, y: 238 },
+      occupation:  { x: 450, y: 238 },
+      contactApp:  { x: 180, y: 253 },
+      accountNo:   { x: 450, y: 253 }
+    };
+
+    document.getElementById("generatePdf").addEventListener("click", async () => {
+      const data = {
+        surname: document.getElementById("surname").value.trim(),
+        givenName: document.getElementById("givenName").value.trim(),
+        dob: formatDate(document.getElementById("dob").value),
+        address: document.getElementById("address").value.trim(),
+        suburb: document.getElementById("suburb").value.trim(),
+        state: document.getElementById("state").value.trim(),
+        postcode: document.getElementById("postcode").value.trim(),
+        country: document.getElementById("country").value.trim(),
+        mobile: document.getElementById("mobile").value.trim(),
+        phone: document.getElementById("phone").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        occupation: document.getElementById("occupation").value.trim(),
+        contactApp: document.getElementById("contactApp").value || "",
+        accountNo: document.getElementById("accountNo").value.trim(),
+      };
+
+      // 验证必填项
+      const requiredFields = ['surname', 'givenName', 'dob', 'address', 'suburb', 'state', 'postcode', 'country'];
+      for (const field of requiredFields) {
+        if (!data[field]) {
+          alert(`请填写：${document.querySelector(`[for="${field}"]`)?.textContent || field}`);
+          return;
+        }
+      }
+
+      try {
+        // 加载原始模板
+        const templateUrl = 'template.pdf';
+        const templateBytes = await fetch(templateUrl).then(res => res.arrayBuffer());
+        const pdfDoc = await PDFDocument.load(templateBytes);
+        const page = pdfDoc.getPages()[0];
+        const pageHeight = page.getHeight(); // A4: 842pt
+
+        const fontSize = 10;
+        const textColor = rgb(0, 0, 0); // 黑色
+
+        // 写入每个字段（使用您测试出的精确坐标）
+        for (const [key, pos] of Object.entries(FIELD_POSITIONS)) {
+          const value = data[key];
+          if (value) {
+            // 关键：Y 坐标转换为 pdf-lib 的左下角坐标系
+            const y = pageHeight - pos.y;
+            page.drawText(value, {
+              x: pos.x,
+              y: y,
+              size: fontSize,
+              color: textColor
+            });
+          }
+        }
+
+        // 保存并下载
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `个人开户表格-${formatFilenameDate()}.pdf`;
+        a.click();
+
+      } catch (error) {
+        console.error("PDF生成失败:", error);
+        alert("未找到 template.pdf，请确保它与本文件在同一目录。\n" + error.message);
+      }
+    });
+
+    // 格式化出生日期显示
+    function formatDate(dateStr) {
+      if (!dateStr) return "";
+      const d = new Date(dateStr);
+      return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+    }
+
+    // 用于文件名的时间戳
+    function formatFilenameDate() {
+      const d = new Date();
+      return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+    }
+  </script>
+</body>
+</html>
