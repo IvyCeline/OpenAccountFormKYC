@@ -125,6 +125,89 @@
   </form>
 
   <script>
+      (function () {
+        const qs = new URLSearchParams(window.location.search);
+        if (!qs.toString()) return;            // 没有任何查询参数就不做事
+        // 如果你想“只有带 autofill=1 才预填”，就改成：if (qs.get('autofill') !== '1') return;
+
+        // 工具：安全设置值并触发 input/change
+        function setValById(id, val) {
+          if (!val) return;
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.value = val;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        // 工具：把 YYYY-MM-DD 转换为 dd/mm/yyyy；已是 dd/mm/yyyy 则原样返回
+        function normalizeDob(v) {
+          if (!v) return v;
+          // yyyy-mm-dd
+          const m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+          if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+          return v;
+        }
+
+        // 取参并写入（参数名→输入框 id 一一对应）
+        const map = [
+          ['surname',     'surname'],
+          ['givenName',   'givenName'],
+          ['address',     'address'],
+          ['suburb',      'suburb'],
+          ['state',       'state'],
+          ['postcode',    'postcode'],
+          ['country',     'country'],
+          ['mobile',      'mobile'],
+          ['phone',       'phone'],
+          ['email',       'email'],
+          ['occupation',  'occupation'],
+          ['accountNo',   'accountNo'],
+        ];
+
+        // 生日单独处理（考虑 yyyy-mm-dd→dd/mm/yyyy）
+        const dobParam = qs.get('dob');
+        if (dobParam) {
+          // 你的 input 是 <input type="date">，浏览器接受 yyyy-mm-dd；
+          // 但你的 PDF 生成需要 dd/mm/yyyy，所以：
+          // 1) input 里设置 yyyy-mm-dd（若传来的是 dd/mm/yyyy，我们转换回 yyyy-mm-dd 供 <input type="date"> 用）
+          // 2) 你生成 PDF 时仍会用 formatDate() 变成 dd/mm/yyyy 输出
+          const dobInput = document.getElementById('dob');
+          if (dobInput) {
+            let iso = dobParam;
+            // 如果是 dd/mm/yyyy，把它转回 yyyy-mm-dd 给 <input type="date">
+            const dm = dobParam.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+            if (dm) iso = `${dm[3]}-${dm[2]}-${dm[1]}`;
+            dobInput.value = iso;
+            dobInput.dispatchEvent(new Event('input', { bubbles: true }));
+            dobInput.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        }
+
+        // 其它常规字段
+        map.forEach(([q, id]) => setValById(id, qs.get(q)));
+
+        // Contact App 下拉
+        const contactApp = qs.get('contactApp');
+        if (contactApp) {
+          const sel = document.getElementById('contactApp');
+          if (sel) {
+            sel.value = contactApp;
+            sel.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        }
+
+        // 可选：带 autoprint=1 就自动生成 PDF
+        if (qs.get('autoprint') === '1') {
+          const btn = document.getElementById('generatePdf');
+          // 给一点时间让浏览器把值写进控件
+          setTimeout(() => btn && btn.click(), 100);
+        }
+      })();
+  </script>
+
+
+  <script>
     const { PDFDocument, rgb } = PDFLib;
 
     // 🔧 您亲自测试出的最佳坐标（已验证对齐）
