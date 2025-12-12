@@ -302,7 +302,11 @@
     function formatDate(dateStr) {
       if (!dateStr) return "";
       const d = new Date(dateStr);
-      return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+
+      return `${day}/${month}/${year}`;
     }
 
     // 用于文件名的时间戳
