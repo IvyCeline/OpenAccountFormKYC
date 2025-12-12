@@ -228,7 +228,7 @@
       accountNo:   { x: 450, y: 252 }
     };
 
-    document.getElementById("generatePdf").addEventListener("click", async () => {
+    document.getElementById("generatePdf").onclick = async () => {
       const data = {
         surname: document.getElementById("surname").value.trim(),
         givenName: document.getElementById("givenName").value.trim(),
@@ -296,7 +296,7 @@
         console.error("PDF生成失败:", error);
         alert("未找到 template.pdf，请确保它与本文件在同一目录。\n" + error.message);
       }
-    });
+    };
 
     // 格式化出生日期显示
     function formatDate(dateStr) {
