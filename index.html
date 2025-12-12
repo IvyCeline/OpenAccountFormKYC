@@ -287,7 +287,9 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `个人开户表格-${[data.givenName, data.surname].filter(Boolean).join(' ')}.pdf`;
+        const gn = String(document.getElementById("givenName").value || "").trim();
+        const sn = String(document.getElementById("surname").value || "").trim();
+        a.download = `个人开户表格-${[gn, sn].filter(Boolean).join(" ")}.pdf`;
         a.click();
 
       } catch (error) {
